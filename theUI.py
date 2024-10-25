@@ -4,6 +4,11 @@ from PIL import Image, ImageTk, ImageOps
 import cv2
 import numpy as np
 
+# Global variables
+img = None
+img_display = None
+image_history = []  # Stack to store image states
+
 # Function to start the main application after loading animation
 def start_main_app():   
     loading_label.destroy()  # Remove the loading animation when done
@@ -11,7 +16,7 @@ def start_main_app():
 
 # Function to display the loading animation using a video for 3 seconds
 def show_loading_video():
-    video_path = "loading.mp4"  # Replace with the path to your video file
+    video_path = "assets/loading.mp4"  # Replace with the path to your video file
     cap = cv2.VideoCapture(video_path)
     root.after(3000, lambda: (cap.release(), start_main_app()))  # Start main app after 3 seconds
 
@@ -45,7 +50,7 @@ def create_main_ui():
     root.config(bg="#1A1A40")
 
     # Load and set the background image
-    background_img = Image.open("background.png")  # Replace with your .png image path
+    background_img = Image.open("assets/background.png")  # Replace with your .png image path
     background_img = background_img.resize((700, 500), Image.LANCZOS)
     background_img_tk = ImageTk.PhotoImage(background_img)
 
@@ -93,10 +98,6 @@ def create_main_ui():
     # Title Label
     title_label = tk.Label(root, text="Star Pattern Detection App", font=("Arial", 16, "bold"), bg="#1A1A40", fg="#8080FF")
     title_label.grid(row=6, column=0, columnspan=2, pady=20)
-
-    # Initialize image history stack
-    global image_history
-    image_history = []  # Stack to store image states
 
 # Functionality for the buttons
 def load_image():
