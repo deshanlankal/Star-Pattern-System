@@ -46,12 +46,12 @@ def show_loading_video():
 # Function to create the main UI
 def create_main_ui():
     root.title("Star Pattern Detection App")
-    root.geometry("700x500")
-    root.config(bg="#1A1A40")
+    root.attributes('-fullscreen', True)  # Set to fullscreen
+    root.bind("<Escape>", lambda e: root.attributes('-fullscreen', False))  # Exit fullscreen on Escape
 
     # Load and set the background image
     background_img = Image.open("assets/background.png")  # Replace with your .png image path
-    background_img = background_img.resize((700, 500), Image.LANCZOS)
+    background_img = background_img.resize((root.winfo_width(), root.winfo_height()), Image.LANCZOS)
     background_img_tk = ImageTk.PhotoImage(background_img)
 
     background_label = tk.Label(root, image=background_img_tk)
@@ -60,8 +60,8 @@ def create_main_ui():
 
     # Create a canvas to display the image
     global canvas
-    canvas = tk.Canvas(root, width=400, height=300, bg="black", highlightthickness=2, highlightbackground="#8080FF")
-    canvas.grid(row=0, column=0, rowspan=7, padx=20, pady=20)
+    canvas = tk.Canvas(root, bg="black", highlightthickness=2, highlightbackground="#8080FF")
+    canvas.grid(row=0, column=0, rowspan=8, padx=20, pady=20)
 
     # Button styling
     button_style = {
@@ -95,9 +95,12 @@ def create_main_ui():
     find_btn = tk.Button(root, text="Detect Star Pattern", command=find_pattern, **button_style)
     find_btn.grid(row=5, column=1, padx=10, pady=10)
 
+    noise_reduction_btn = tk.Button(root, text="Gaussian Blur", command=apply_gaussian_blur, **button_style)  # New Noise Reduction button
+    noise_reduction_btn.grid(row=6, column=1, padx=10, pady=10)
+
     # Title Label
     title_label = tk.Label(root, text="Star Pattern Detection App", font=("Arial", 16, "bold"), bg="#1A1A40", fg="#8080FF")
-    title_label.grid(row=6, column=0, columnspan=2, pady=20)
+    title_label.grid(row=7, column=0, columnspan=2, pady=20)
 
 # Functionality for the buttons
 def load_image():
@@ -109,6 +112,7 @@ def load_image():
         img_display = ImageTk.PhotoImage(img)
         canvas.create_image(0, 0, anchor=tk.NW, image=img_display)
         canvas.image = img_display
+        resize_canvas()
 
 def convert_to_grayscale():
     global img, img_display
@@ -118,6 +122,7 @@ def convert_to_grayscale():
         img_display = ImageTk.PhotoImage(img)
         canvas.create_image(0, 0, anchor=tk.NW, image=img_display)
         canvas.image = img_display
+        resize_canvas()
 
 def sharpen_image():
     global img, img_display
@@ -135,6 +140,7 @@ def sharpen_image():
         img_display = ImageTk.PhotoImage(img)
         canvas.create_image(0, 0, anchor=tk.NW, image=img_display)
         canvas.image = img_display
+        resize_canvas()
 
 def rotate_image():
     global img, img_display
@@ -144,6 +150,19 @@ def rotate_image():
         img_display = ImageTk.PhotoImage(img)
         canvas.create_image(0, 0, anchor=tk.NW, image=img_display)
         canvas.image = img_display
+        resize_canvas()
+
+def apply_gaussian_blur():
+    global img, img_display
+    if img:
+        push_image_state()  # Save current image state
+        img_np = np.array(img)
+        img_blurred = cv2.GaussianBlur(img_np, (15, 15), 0)  # Apply Gaussian blur
+        img = Image.fromarray(img_blurred)
+        img_display = ImageTk.PhotoImage(img)
+        canvas.create_image(0, 0, anchor=tk.NW, image=img_display)
+        canvas.image = img_display
+        resize_canvas()
 
 def find_pattern():
     # Placeholder for image pattern recognition.
@@ -161,13 +180,19 @@ def undo():
         img_display = ImageTk.PhotoImage(img)
         canvas.create_image(0, 0, anchor=tk.NW, image=img_display)
         canvas.image = img_display
+        resize_canvas()
+
+def resize_canvas():
+    global img_display
+    if img_display:
+        canvas.config(width=root.winfo_width() // 2, height=root.winfo_height() // 2)  # Adjust canvas size based on window size
+        canvas.create_image(0, 0, anchor=tk.NW, image=img_display)
 
 # Create the main root window and loading label
 root = tk.Tk()
-root.geometry("700x500")
 loading_label = tk.Label(root)
 loading_label.pack(fill="both", expand=True)  # Make the loading label expand to the window size
 show_loading_video()  # Display loading video
 
-# Start the GUI loop
+# Start the GUI main loop
 root.mainloop()
