@@ -3,12 +3,14 @@ from tkinter import filedialog
 from PIL import Image, ImageTk, ImageOps
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 # Global variables
 img = None
 img_display = None
 image_history = []  # Stack to store image states
-loading_duration = 3000  # Duration for loading animation in milliseconds
+loading_duration = 5500  # Duration for loading animation in milliseconds
 
 # Function to start the main application after loading animation
 def start_main_app():
@@ -136,6 +138,64 @@ def load_image():
         canvas.create_image(0, 0, anchor=tk.NW, image=img_display)
         canvas.image = img_display
         enable_buttons()
+        show_graphs()  # Show graphs after loading the image
+
+def show_graphs():
+    if img is None:
+        return  # No image loaded, do nothing
+
+    # Create a new window for the graphs
+    graphs_window = tk.Toplevel(root)
+    graphs_window.title("Image Analysis Charts")
+    graphs_window.geometry("800x600")
+
+    # Brightness Distribution
+    brightness_data = np.array(img).mean(axis=2)  # Average across color channels for brightness
+    plt.figure(figsize=(10, 4))
+
+    plt.subplot(2, 2, 1)
+    plt.hist(brightness_data.ravel(), bins=256, color='gray', alpha=0.7)
+    plt.title('Brightness Distribution')
+    plt.xlabel('Brightness Value')
+    plt.ylabel('Frequency')
+
+    # Color Histogram
+    plt.subplot(2, 2, 2)
+    colors = ('r', 'g', 'b')
+    for i, color in enumerate(colors):
+        histogram, bin_edges = np.histogram(np.array(img)[:, :, i], bins=256, range=(0, 255))
+        plt.plot(bin_edges[0:-1], histogram, color=color)
+    plt.title('Color Histogram')
+    plt.xlabel('Color Value')
+    plt.ylabel('Frequency')
+
+    # Edge Detection Distribution
+    img_np = np.array(img)
+    edges = cv2.Canny(img_np, 100, 200)  # Basic Canny edge detection
+    plt.subplot(2, 2, 3)
+    plt.hist(edges.ravel(), bins=2, color='black', alpha=0.7)
+    plt.title('Edge Detection Distribution')
+    plt.xlabel('Edge Detected (0 or 1)')
+    plt.ylabel('Frequency')
+
+    # Frequency of Detected Patterns
+    # This is a placeholder. Implement the logic to analyze and display detected patterns.
+    detected_patterns = ['Auriga', 'Boötes', 'None']  # Example patterns
+    pattern_counts = [5, 3, 10]  # Example frequencies
+
+    plt.subplot(2, 2, 4)
+    plt.bar(detected_patterns, pattern_counts, color='purple')
+    plt.title('Frequency of Detected Patterns')
+    plt.xlabel('Patterns')
+    plt.ylabel('Frequency')
+
+    plt.tight_layout()
+
+    # Draw the matplotlib figure in the Tkinter window
+    canvas = FigureCanvasTkAgg(plt.gcf(), master=graphs_window)
+    canvas.draw()
+    canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
 
 def enable_buttons():
     grayscale_btn.config(state="normal")
