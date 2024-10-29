@@ -27,7 +27,7 @@ def show_loading_video():
 
         if ret and elapsed_time < loading_duration:
             # Resize frame to fit application window
-            frame = cv2.resize(frame, (700, 500))  # Fixed size
+            frame = cv2.resize(frame, (window_width, window_height))  # Use dynamic window size
             # Convert the frame to RGB (OpenCV uses BGR)
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             frame_pil = Image.fromarray(frame)
@@ -48,13 +48,20 @@ def show_loading_video():
 
 # Function to create the main UI
 def create_main_ui():
-    root.title("Star Pattern Detection App")
-    root.geometry("700x500")
-    root.config(bg="#1A1A40")
+    root.title("Dynamic Star Pattern Detection App")
+
+    # Get screen dimensions
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+
+    # Define window dimensions relative to screen size
+    global window_width, window_height
+    window_width, window_height = int(screen_width * 0.7), int(screen_height * 0.7)
+    root.geometry(f"{window_width}x{window_height}")
 
     # Load and set the background image
     background_img = Image.open("assets/background.png")
-    background_img = background_img.resize((700, 500), Image.LANCZOS)
+    background_img = background_img.resize((window_width, window_height), Image.LANCZOS)
     background_img_tk = ImageTk.PhotoImage(background_img)
 
     background_label = tk.Label(root, image=background_img_tk)
@@ -63,7 +70,7 @@ def create_main_ui():
 
     # Create a canvas to display the image
     global canvas
-    canvas = tk.Canvas(root, width=400, height=300, bg="black", highlightthickness=2, highlightbackground="#8080FF")
+    canvas = tk.Canvas(root, width=window_width * 0.5, height=window_height * 0.6, bg="black", highlightthickness=2, highlightbackground="#8080FF")
     canvas.grid(row=0, column=0, rowspan=8, padx=20, pady=20)
 
     # Button styling
@@ -80,7 +87,7 @@ def create_main_ui():
     }
 
     # Create buttons with enhanced styling
-    global load_btn, grayscale_btn, sharpen_btn, rotate_btn, blur_btn, find_btn
+    global load_btn, grayscale_btn, sharpen_btn, rotate_btn, blur_btn, find_btn, remove_filters_btn, enhance_btn
 
     load_btn = tk.Button(root, text="Load Image", command=load_image, **button_style)
     load_btn.grid(row=0, column=1, padx=10, pady=10)
@@ -100,18 +107,19 @@ def create_main_ui():
     find_btn = tk.Button(root, text="Detect Star Pattern", command=detect_star_pattern, state="disabled", **button_style)
     find_btn.grid(row=5, column=1, padx=10, pady=10)
 
+    remove_filters_btn = tk.Button(root, text="Remove All Filters", command=remove_all_filters, state="disabled", **button_style)
+    remove_filters_btn.grid(row=6, column=1, padx=10, pady=10)
+
+    enhance_btn = tk.Button(root, text="Enhance Image", command=enhance_image, state="disabled", **button_style)
+    enhance_btn.grid(row=7, column=1, padx=10, pady=10)
+
     # Title Label
     title_label = tk.Label(root, text="Star Pattern Detection App", font=("Arial", 16, "bold"), bg="#1A1A40", fg="#8080FF")
-    title_label.grid(row=6, column=0, columnspan=3, pady=20)
+    title_label.grid(row=8, column=0, columnspan=3, pady=20)
 
     # Configure grid weights for proper resizing
-    root.grid_rowconfigure(0, weight=1)
-    root.grid_rowconfigure(1, weight=1)
-    root.grid_rowconfigure(2, weight=1)
-    root.grid_rowconfigure(3, weight=1)
-    root.grid_rowconfigure(4, weight=1)
-    root.grid_rowconfigure(5, weight=1)
-    root.grid_rowconfigure(6, weight=1)
+    for i in range(9):
+        root.grid_rowconfigure(i, weight=1)
     root.grid_columnconfigure(0, weight=1)
     root.grid_columnconfigure(1, weight=1)
     root.grid_columnconfigure(2, weight=1)
@@ -123,7 +131,7 @@ def load_image():
     if file_path:
         push_image_state()  # Save current image state
         img = Image.open(file_path)
-        img.thumbnail((400, 300))  # Resize to fit canvas size
+        img.thumbnail((window_width * 0.5, window_height * 0.6))  # Resize to fit canvas size
         img_display = ImageTk.PhotoImage(img)
         canvas.create_image(0, 0, anchor=tk.NW, image=img_display)
         canvas.image = img_display
@@ -135,6 +143,8 @@ def enable_buttons():
     rotate_btn.config(state="normal")
     blur_btn.config(state="normal")
     find_btn.config(state="normal")
+    remove_filters_btn.config(state="normal")
+    enhance_btn.config(state="normal")
 
 def convert_to_grayscale():
     global img, img_display
@@ -182,38 +192,22 @@ def detect_star_pattern():
     if img:
         push_image_state()  # Save the current state of the image
 
-        # Apply grayscale conversion
-        img = ImageOps.grayscale(img)
+        # Placeholder star pattern detection logic
+        detected_pattern = "Pattern: Auriga or Boötes"
+        pattern_label = tk.Label(root, text=detected_pattern, font=("Arial", 14, "bold"), bg="#1A1A40", fg="white")
+        pattern_label.grid(row=9, column=0, columnspan=3, pady=10)
 
-        # Apply sharpening
-        img_np = np.array(img)
-        kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]])
-        img_sharpened = cv2.filter2D(img_np, -1, kernel)
-        img = Image.fromarray(img_sharpened)
-
-        # Rotate the image
-        img = img.rotate(90, expand=True)
-
-        # Apply Gaussian blur
-        img_np = np.array(img)
-        blurred_img = cv2.GaussianBlur(img_np, (15, 15), 0)
-        img = Image.fromarray(blurred_img)
-
-        # Display the processed image
+def remove_all_filters():
+    global img, img_display
+    if image_history:
+        img = image_history[0]  # Reset to the first state (original)
         img_display = ImageTk.PhotoImage(img)
         canvas.create_image(0, 0, anchor=tk.NW, image=img_display)
         canvas.image = img_display
 
-        # Here, add the code for detecting the star pattern
-        # For now, this is a placeholder. Replace this with the actual detection logic
-        detected_pattern = "Pattern: Auriga or Boötes"  # Example output
-        pattern_label = tk.Label(root, text=detected_pattern, font=("Arial", 14, "bold"), bg="#1A1A40", fg="white")
-        pattern_label.grid(row=6, column=0, columnspan=3, pady=10)
-
-        # Update the Detect Star Pattern button to call this function
-        find_btn = tk.Button(root, text="Detect Star Pattern", command=detect_star_pattern, **button_style)
-
-    
+def enhance_image():
+    # Placeholder for additional enhancement logic
+    pass
 
 def push_image_state():
     global img, image_history
@@ -227,6 +221,14 @@ root.title("Loading...")
 # Display the loading label
 loading_label = tk.Label(root)
 loading_label.pack()
+
+# Get screen dimensions
+screen_width = root.winfo_screenwidth()
+screen_height = root.winfo_screenheight()
+
+# Define window dimensions relative to screen size
+window_width, window_height = int(screen_width * 0.7), int(screen_height * 0.7)
+root.geometry(f"{window_width}x{window_height}")
 
 # Start the loading animation
 show_loading_video()
