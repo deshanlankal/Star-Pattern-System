@@ -294,3 +294,12 @@ root.geometry(f"{window_width}x{window_height}")
 show_loading_video()
 
 root.mainloop()
+
+
+
+
+
+
+
+
+
