@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk, ImageOps
 import cv2
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -12,6 +13,7 @@ img = None
 img_display = None
 image_history = []  # Stack to store image states
 loading_duration = 5500  # Duration for loading animation in milliseconds
+patterns = []
 
 # Function to start the main application after loading animation
 def start_main_app():
@@ -93,6 +95,9 @@ def create_main_ui():
     result_label = tk.Label(root, text="", font=("Arial", 12), bg="#1A1A40", fg="#FFFFFF")
     result_label.grid(row=8, column=0, padx=20, pady=5)  # Adjust row and column for desired positioning
 
+    global match_ratio_label
+    match_ratio_label = tk.Label(root, text="", font=("Arial", 12), bg="#1A1A40", fg="#FFFFFF")
+    match_ratio_label.grid(row=9, column=0, padx=20, pady=5)  # Place it below result_label
 
     ######## Button styling ##################
     button_style = {
@@ -109,7 +114,7 @@ def create_main_ui():
 
     # Create buttons with enhanced styling
     global load_btn, grayscale_btn, sharpen_btn, rotate_btn, blur_btn, remove_filters_btn, enhance_btn, remove_sault_and_pepper_btn,btn_brightness_distribution, btn_brightness_heatmap, btn_star_density_plot, btn_color_temperature_map, find_btn
-
+    load_patterns()
     load_btn = tk.Button(root, text="Load Image", command=load_image, **button_style)
     load_btn.grid(row=0, column=1, padx=10, pady=10)
 
@@ -139,7 +144,7 @@ def create_main_ui():
 
     btn_brightness_heatmap = tk.Button(root, text="Brightness Heatmap", command=show_brightness_heatmap, state="disabled", **button_style)
     btn_brightness_heatmap.grid(row=2, column=2, padx=10, pady=10)
-
+    
     btn_star_density_plot = tk.Button(root, text="Star Density Plot", command=show_star_density_plot, state="disabled", **button_style)
     btn_star_density_plot.grid(row=3, column=2, padx=10, pady=10)
 
@@ -222,7 +227,7 @@ def load_image():
                 enable_buttons()
                 show_graphs()
                 # Show informational message box
-                messagebox.showinfo("Image Analysis", "Night sky detected!")
+               # messagebox.showinfo("Image Analysis", "Night sky detected!")
             else:
                 result_label.config(text="Not a night sky image. Please upload a night sky image.")
                 disable_buttons()
@@ -309,7 +314,8 @@ def load_patterns():
 ########################################################################################################
 ##################  The main Function of the Program that detect the pattern ###########################
 def find_pattern():
-    global img
+    global img, match_ratio_label  # Ensure match_ratio_label is accessible
+
     if img:
         img_cv = np.array(img.convert('L'))
         orb = cv2.ORB_create()
@@ -335,10 +341,10 @@ def find_pattern():
 
         if best_match_name:
             result_label.config(text=f"Best Match: {best_match_name}")
-            match_ratio_label.config(text=f"Matching Ratio: {best_match_ratio:.2f}")  # Ensure this line is present
+            match_ratio_label.config(text=f"Matching Ratio: {best_match_ratio:.2f}")  # Update the label
         else:
             result_label.config(text="No match found")
-            match_ratio_label.config(text="Matching Ratio: N/A")  # Ensure this line is present
+            match_ratio_label.config(text="Matching Ratio: N/A")  # Update when no match is found
 #######################################################################################################
 ########### Independent Charts ########################################################################
 ########################################################################################################
