@@ -164,6 +164,7 @@ def enable_buttons():
     blur_btn.config(state="normal")
     find_btn.config(state="normal")
     remove_filters_btn.config(state="normal")
+    remove_sault_and_pepper_btn.config(state="normal")
     enhance_btn.config(state="normal")##
     btn_brightness_distribution.config(state="normal")
     btn_brightness_heatmap.config(state="normal")
@@ -177,6 +178,7 @@ def disable_buttons():
     rotate_btn.config(state="disabled")
     blur_btn.config(state="disabled")
     find_btn.config(state="disabled")
+    remove_sault_and_pepper_btn.config(state="disabled")
     remove_filters_btn.config(state="disabled")
     enhance_btn.config(state="disabled")##
     btn_brightness_distribution.config(state="disabled")
@@ -314,7 +316,7 @@ def load_patterns():
 ########################################################################################################
 ##################  The main Function of the Program that detect the pattern ###########################
 def find_pattern():
-    global img, match_ratio_label  # Ensure match_ratio_label is accessible
+    global img, match_ratio_label  
 
     if img:
         img_cv = np.array(img.convert('L'))
@@ -485,8 +487,13 @@ def remove_all_filters():
         canvas.image = img_display
 
 def enhance_image():
-    # Placeholder for additional enhancement logic
-    pass
+    global img
+    if img is not None:
+        img_cv = np.array(img.convert('L'))  # Convert to grayscale if not already
+        enhanced_img = cv2.equalizeHist(img_cv)  # Apply histogram equalization
+        img = Image.fromarray(enhanced_img)  # Convert back to PIL image
+        display_image(img)  # Assuming you have a function to display the updated image
+
 
 def push_image_state():
     global img, image_history
